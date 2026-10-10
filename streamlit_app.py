@@ -4,7 +4,7 @@ import streamlit as st
 
 # Configure the page layout to use wide mode for full width tables
 st.set_page_config(
-    page_title="Charleville LTC Padel Box League",
+    page_title="Charleville LTC Ladies Box League",
     page_icon="🎾",
     layout="wide",
 )
@@ -13,15 +13,15 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+        html, body, #root, [data-testid="stAppViewContainer"] {
+            touch-action: pan-x pan-y pinch-zoom;
+        }
+
         /* Custom Header Banner with Court Background Image */
         .header-container {
-            background: linear-gradient(rgba(27, 77, 62, 0.88), rgba(46, 204, 113, 0.88)), 
-                        url('https://images.unsplash.com/photo-1709587825099-f6f07e5337af?q=80&w=3131&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
+            background: linear-gradient(135deg, rgba(58, 28, 93, 0.92), rgba(217, 72, 160, 0.88)); 
             padding: 2.5rem 2rem;
             border-radius: 10px;
-            color: white;
             margin-bottom: 2rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
@@ -53,19 +53,15 @@ st.markdown(
 )
 
 # Google Sheet Export URL configuration
-SHEET_ID = "1x-tP2lFaBGqMcWXN4QIErGF02FD3HZFD_IH4U32eiDU"
-EMERALD_GID = "1522007513"
-SHAMROCK_GID = "954276068"
+SHEET_ID = "1-kzWLFm3vy38Cdux8QV0Pnkn4tLYGobTRQDErBvivj8"
+TOLKA_GID = "638881371"
+LIFFEY_GID = "1812558039"
 
 @st.cache_data(ttl=60)
 def load_league_data(gid):
     csv_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-    df = pd.read_csv(csv_url, skiprows=1)
+    df = pd.read_csv(csv_url)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-
-    # Add spacing padding to the Team column values to force a wider column fit natively
-    if "Team" in df.columns:
-        df["Team"] = df["Team"].astype(str) + "    "
         
     return df
 
@@ -78,68 +74,55 @@ def load_results_data():
     except Exception:
         return pd.DataFrame()
 
-# Styling function to highlight top 2 playoff spots & shade Total Points column safely for themes
+# Styling function shade Total Points column safely for themes
 def style_league_table(df):
-    def apply_styles(row):
-        styles = [''] * len(row)
-        try:
-            pos = int(row.iloc[0])
-            if pos <= 2:
-                for i in range(len(row)):
-                    styles[i] = 'background-color: rgba(46, 204, 113, 0.25); font-weight: bold;'
-        except Exception:
-            pass
-        return styles
-
-    styled = df.style.apply(apply_styles, axis=1)
-    
-    # Shade the 'Total Points' column using Streamlit conditional / neutral fallback colors
-    if "Total Points" in df.columns:
-        styled = styled.set_properties(
-            subset=["Total Points"], 
-            props="background-color: rgba(128, 128, 128, 0.2); font-weight: bold;"
-        )
         
-    return styled
+    # Shade the 'Total Points' column using Streamlit conditional / neutral fallback colors
+    
+    if "Total Score" in df.columns:
+        return df.style.set_properties(
+            subset=["Total Score"],
+            props="background-color: rgba(128, 128, 128, 0.2); font-weight: bold;",
+        )
+    return df.style
 
 # Styled Header Banner
 st.markdown(
     """
     <div class="header-container">
-        <h1>Charleville LTC Padel Box League</h1>
-        <p>Live standings, results, and official league rules. Sep-Nov 2026.</p>
+        <h1>Charleville LTC Ladies Box League</h1>
+        <p>Live standings, results, and official league rules.</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 try:
-    emerald_df = load_league_data(EMERALD_GID)
-    shamrock_df = load_league_data(SHAMROCK_GID)
+    tolka_df = load_league_data(TOLKA_GID)
+    liffey_df = load_league_data(LIFFEY_GID)
     results_df = load_results_data()
 
     # Create 3 top-level tabs
-    tab_emerald, tab_shamrock, tab_rules = st.tabs([
-        "🟢 Emerald Division", 
-        "☘️ Shamrock Division", 
-        "📖 League Rules"
+    tab_tolka, tab_liffey, tab_rules = st.tabs([
+        "Tolka Division", 
+        "Liffey Division", 
+        "League Rules"
     ])
 
-    with tab_emerald:
-        st.subheader("Emerald Division Standings")
-        st.markdown("*(Top 2 teams qualify for the semi-finals!)*")
+    with tab_tolka:
+        st.subheader("Tolka Division Standings")
         st.dataframe(
-            style_league_table(emerald_df), 
+            style_league_table(tolka_df), 
             use_container_width=True, 
             hide_index=True
         )
         
         st.markdown("---")
-        st.subheader("🏆 Emerald Division Results")
+        st.subheader("🏆 Tolka Division Results")
         if not results_df.empty and "Select your Box League Division" in results_df.columns:
-            em_results = results_df[results_df["Select your Box League Division"].str.contains("Emerald", na=False)]
-            if not em_results.empty:
-                for _, row in em_results.iterrows():
+            tolka_results = results_df[results_df["Select your Box League Division"].str.contains("Tolka", na=False)]
+            if not tolka_results.empty:
+                for _, row in tolka_results.iterrows():
                     winner = row.get("Winning Team", "")
                     loser = row.get("Losing Team", "")
                     w_score = row.get("Winning Team Score (Games won)", "")
@@ -154,28 +137,25 @@ try:
                         unsafe_allow_html=True
                     )
             else:
-                st.info("No results recorded for the Emerald Division yet.")
+                st.info("No results recorded for the Tolka Division yet.")
         else:
             st.info("No results recorded yet.")
 
-    with tab_shamrock:
-        if Path("shamrock_logo.png").exists():
-            st.image("shamrock_logo.png", width=120)
+    with tab_liffey:
             
-        st.subheader("Shamrock Division Standings")
-        st.markdown("*(Top 2 teams qualify for the semi-finals!)*")
+        st.subheader("Liffey Division Standings")
         st.dataframe(
-            style_league_table(shamrock_df), 
+            style_league_table(liffey_df), 
             use_container_width=True, 
             hide_index=True,
         )
         
         st.markdown("---")
-        st.subheader("🏆 Shamrock Division Results")
+        st.subheader("🏆 Liffey Division Results")
         if not results_df.empty and "Select your Box League Division" in results_df.columns:
-            sh_results = results_df[results_df["Select your Box League Division"].str.contains("Shamrock", na=False)]
-            if not sh_results.empty:
-                for _, row in sh_results.iterrows():
+            liffey_results = results_df[results_df["Select your Box League Division"].str.contains("Liffey", na=False)]
+            if not liffey_results.empty:
+                for _, row in liffey_results.iterrows():
                     winner = row.get("Winning Team", "")
                     loser = row.get("Losing Team", "")
                     w_score = row.get("Winning Team Score (Games won)", "")
@@ -190,12 +170,12 @@ try:
                         unsafe_allow_html=True
                     )
             else:
-                st.info("No results recorded for the Shamrock Division yet.")
+                st.info("No results recorded for the Liffey Division yet.")
         else:
             st.info("No results recorded yet.")
 
     with tab_rules:
-        st.subheader("Charleville LTC Padel Box League Rules")
+        st.subheader("Charleville LTC Ladies Box League Rules")
         try:
             with open("rules.md", "r", encoding="utf-8") as f:
                 rules_markdown = f.read()
