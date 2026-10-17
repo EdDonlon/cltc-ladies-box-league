@@ -52,23 +52,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Google Sheet Export URL configuration
-SHEET_ID = "1-kzWLFm3vy38Cdux8QV0Pnkn4tLYGobTRQDErBvivj8"
-TOLKA_GID = "638881371"
-LIFFEY_GID = "1812558039"
-
 @st.cache_data(ttl=60)
-def load_league_data(gid):
-    csv_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
+def load_league_data(sheet_id, gid):
+    csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     df = pd.read_csv(csv_url)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
         
     return df
 
 @st.cache_data(ttl=60)
-def load_results_data():
+def load_results_data(sheet_id):
     try:
-        csv_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Results"
+        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Results"
         df = pd.read_csv(csv_url)
         return df
     except Exception:
@@ -98,9 +93,14 @@ st.markdown(
 )
 
 try:
-    tolka_df = load_league_data(TOLKA_GID)
-    liffey_df = load_league_data(LIFFEY_GID)
-    results_df = load_results_data()
+    sheet_config = st.secrets["sheets"]
+    sheet_id = sheet_config["spreadsheet_id"]
+    tolka_gid = sheet_config["tolka_gid"]
+    liffey_gid = sheet_config["liffey_gid"]
+
+    tolka_df = load_league_data(sheet_id, tolka_gid)
+    liffey_df = load_league_data(sheet_id, liffey_gid)
+    results_df = load_results_data(sheet_id)
 
     # Create 3 top-level tabs
     tab_tolka, tab_liffey, tab_rules = st.tabs([
@@ -180,8 +180,7 @@ try:
             with open("rules.md", "r", encoding="utf-8") as f:
                 rules_markdown = f.read()
             st.markdown(rules_markdown)
-        except FileNotFoundError:
-            st.error("rules.md file not found. Please create it in your project root.")
+        except FileNotFoundError:            st.error("rules.md file not found. Please create it in your project root.")
 
 except Exception as e:
     st.error(f"Could not load league tables: {e}")
