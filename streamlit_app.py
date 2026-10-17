@@ -123,10 +123,10 @@ try:
             tolka_results = results_df[results_df["Select your Box League Division"].str.contains("Tolka", na=False)]
             if not tolka_results.empty:
                 for _, row in tolka_results.iterrows():
-                    winner = row.get("Winning Team", "")
-                    loser = row.get("Losing Team", "")
-                    w_score = row.get("Winning Team Score (Games won)", "")
-                    l_score = row.get("Losing Team Score (Games won)", "")
+                    winner = row.get("Winning Player", "")
+                    loser = row.get("Losing Player", "")
+                    w_score = row.get("Winning Player Score (Games won)", "")
+                    l_score = row.get("Losing Player Score (Games won)", "")
                     date = row.get("Date of Match", "")
                     st.markdown(
                         f"""
@@ -156,10 +156,10 @@ try:
             liffey_results = results_df[results_df["Select your Box League Division"].str.contains("Liffey", na=False)]
             if not liffey_results.empty:
                 for _, row in liffey_results.iterrows():
-                    winner = row.get("Winning Team", "")
-                    loser = row.get("Losing Team", "")
-                    w_score = row.get("Winning Team Score (Games won)", "")
-                    l_score = row.get("Losing Team Score (Games won)", "")
+                    winner = row.get("Winning Player", "")
+                    loser = row.get("Losing Player", "")
+                    w_score = row.get("Winning Player Score (Games won)", "")
+                    l_score = row.get("Losing Player Score (Games won)", "")
                     date = row.get("Date of Match", "")
                     st.markdown(
                         f"""
@@ -180,7 +180,8 @@ try:
             with open("rules.md", "r", encoding="utf-8") as f:
                 rules_markdown = f.read()
             st.markdown(rules_markdown)
-        except FileNotFoundError:            st.error("rules.md file not found. Please create it in your project root.")
+        except FileNotFoundError:            
+            st.error("rules.md file not found. Please create it in your project root.")
 
 except Exception as e:
     st.error(f"Could not load league tables: {e}")
